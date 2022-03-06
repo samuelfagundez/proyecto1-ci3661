@@ -25,6 +25,7 @@ source-repository head
 
 library
   exposed-modules:
+      AA
       Lib
   other-modules:
       Paths_proyecto1_ci3661
