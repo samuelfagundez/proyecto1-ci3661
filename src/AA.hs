@@ -21,7 +21,6 @@ aa (x,a) = x
 -- lvl nivel del nodo
 
 data AA k a = Empty
-            -- | Invalido porque no respeta la secuencia de niveles
             | Node {
                 lvl :: Int ,
                 key :: k ,
@@ -29,6 +28,12 @@ data AA k a = Empty
                 lAA :: AA k a ,
                 rAA :: AA k a
             } deriving (Show, Read, Eq, Ord)
+
+data Invariantes = Valido
+                | ClaveRepetida
+                | NivelesInvalidos
+                -- maybe meter tipos???
+                deriving (Show)
 
 --- Permite usar foldr en el arbol y triggerea esta funcion
 foldAAByValue :: (a -> b -> b) -> b -> AA k a -> b
@@ -44,7 +49,7 @@ mapAA :: (a -> b) -> AA k a -> AA k b
 mapAA f Empty = Empty
 mapAA f (Node lvl key val lAA rAA) = Node lvl key (f val) (mapAA f lAA) (mapAA f rAA)
 
-instance Foldable (AA a) where 
+instance Foldable (AA a) where
     foldr = foldAAByValue
 
 instance Functor (AA a) where
@@ -59,9 +64,18 @@ isEmpty _ = False
 
 insert :: (Ord k) => k -> v -> AA k v -> AA k v
 insert k v Empty = Node 0 k v Empty Empty
-insert k v (Node lvl key val Empty rAA) = if k < key then Node lvl key val (Node (lvl+1) k v Empty Empty) rAA else Node lvl key val Empty (insert k v rAA)
-insert k v (Node lvl key val lAA Empty) = if k > key then Node lvl key val Empty (Node (lvl+1) k v Empty Empty) else Node lvl key val (insert k v lAA) Empty
-insert k v (Node lvl key val lAA rAA) = if k < key then Node lvl key val (insert k v lAA) rAA else Node lvl key val lAA (insert k v rAA)
+insert k v (Node lvl key val Empty rAA)
+  | key == k = Node lvl key val Empty rAA
+  | k < key = Node lvl key val (Node (lvl+1) k v Empty Empty) rAA
+  | otherwise = Node lvl key val Empty (insert k v rAA)
+insert k v (Node lvl key val lAA Empty)
+  | key == k = Node lvl key val lAA Empty
+  | k > key = Node lvl key val Empty (Node (lvl+1) k v Empty Empty)
+  | otherwise = Node lvl key val (insert k v lAA) Empty
+insert k v (Node lvl key val lAA rAA)
+  | key == k = Node lvl key val lAA rAA
+  | k < key = Node lvl key val (insert k v lAA) rAA
+  | otherwise = Node lvl key val lAA (insert k v rAA)
 
 -- reduce arbol a bool
 encontrarKey :: Eq k => k -> AA k a -> Bool
@@ -71,5 +85,6 @@ encontrarKey k tree = foldAAById (\key acc -> acc || key == k) False tree
 lookup :: Eq k => k -> AA k a -> Maybe (AA k a)
 lookup k tree = if encontrarKey k tree then Just tree else Nothing
 
-checkInvariants :: AA k a -> AA k a
-checkInvariants a = Empty
+-- Aca podemos llamar a las funciones que hemos hecho para verificar los invariantes que hayamos definido en Invariantes
+checkInvariants :: AA k a -> Invariantes
+checkInvariants a = Valido
