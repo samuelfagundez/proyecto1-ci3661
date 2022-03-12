@@ -27,6 +27,7 @@ library
   exposed-modules:
       AA
       Lib
+      Match
   other-modules:
       Paths_proyecto1_ci3661
   hs-source-dirs:
