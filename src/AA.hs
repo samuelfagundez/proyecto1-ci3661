@@ -4,8 +4,13 @@ module AA (
     isEmpty,
     lookup,
     insert,
+    encontrarKey,
+    mapAA,
+    foldAAById,
     -- incluyendo por desarrollo, borrar luego
-    arbol
+    arbol,
+    checkInvariants,
+    areLevelsValid
 )
 where
 import Prelude hiding (lookup)
@@ -85,6 +90,18 @@ encontrarKey k tree = foldAAById (\key acc -> acc || key == k) False tree
 lookup :: Eq k => k -> AA k a -> Maybe (AA k a)
 lookup k tree = if encontrarKey k tree then Just tree else Nothing
 
+areLevelsValid :: AA k a -> Bool
+areLevelsValid Empty = True
+areLevelsValid (Node lv k v Empty Empty) = True
+areLevelsValid (Node lv k v Empty (Node lvR kR vR lR rR)) = lv == lvR - 1 && areLevelsValid (Node lvR kR vR lR rR)
+areLevelsValid (Node lv k v (Node lvL kL vL lL rL) Empty) =  lv == lvL - 1 && areLevelsValid (Node lvL kL vL lL rL)
+areLevelsValid (Node lv k v (Node lvL kL vL lL rL) (Node lvR kR vR lR rR)) = lv == lvL-1 && lv == lvR-1 && areLevelsValid (Node lvL kL vL lL rL) && areLevelsValid (Node lvR kR vR lR rR)
+
 -- Aca podemos llamar a las funciones que hemos hecho para verificar los invariantes que hayamos definido en Invariantes
-checkInvariants :: AA k a -> Invariantes
-checkInvariants a = Valido
+checkInvariants :: (Eq k) => AA k a -> Invariantes
+-- Primero revisa las llaves
+checkInvariants tree
+-- encontrar ids repetidos se puede cambiar por transformar el arbol a una lista y luego hacer 1 filter por cada elemento, pero por ahora funciona
+  | foldAAById (\key acc -> acc || foldAAById (\key2 acc2 -> if key2 == key then acc2+1 else acc2) 0 tree > 1) False tree = ClaveRepetida
+  | not (areLevelsValid tree) = NivelesInvalidos
+  | otherwise = Valido
