@@ -3,7 +3,7 @@ module AA (
     empty,
     isEmpty,
     lookup,
-    insert,
+    insert',
     encontrarKey,
     mapAA,
     foldAAById,
@@ -67,20 +67,35 @@ isEmpty :: AA k a -> Bool
 isEmpty Empty = True
 isEmpty _ = False
 
-insert :: (Ord k) => k -> v -> AA k v -> AA k v
-insert k v Empty = Node 0 k v Empty Empty
-insert k v (Node lvl key val Empty rAA)
+skew :: AA k v -> AA k v
+skew Empty = Empty
+skew (Node lvl key val Empty rAA) = Node lvl key val Empty rAA
+skew (Node lvl key val (Node lvlL keyL valL lAAL rAAL) rAA)
+  | lvl == lvlL = Node lvlL keyL valL lAAL (Node lvl key val rAAL rAA)
+  | otherwise = Node lvl key val (Node lvlL keyL valL lAAL rAAL) rAA
+
+split :: AA k v -> AA k v
+split Empty = Empty
+split (Node lvl key val lAA Empty) = Node lvl key val lAA Empty
+split (Node lvl key val lAA (Node lvlR keyR valR lAAR Empty)) = Node lvl key val lAA (Node lvlR keyR valR lAAR Empty)
+split (Node lvl key val lAA (Node lvlR keyR valR lAAR (Node lvlR2 keyR2 valR2 lAAR2 rAAR2)))
+  | lvl == lvlR2 = Node (lvlR+1) keyR valR (Node lvl key val lAA lAAR) (Node lvlR2 keyR2 valR2 lAAR2 rAAR2)
+  | otherwise = Node lvl key val lAA (Node lvlR keyR valR lAAR (Node lvlR2 keyR2 valR2 lAAR2 rAAR2))
+
+insert' :: (Ord k) => k -> v -> AA k v -> AA k v
+insert' k v Empty = Node 0 k v Empty Empty
+insert' k v (Node lvl key val Empty rAA)
   | key == k = Node lvl key val Empty rAA
   | k < key = Node lvl key val (Node (lvl+1) k v Empty Empty) rAA
-  | otherwise = Node lvl key val Empty (insert k v rAA)
-insert k v (Node lvl key val lAA Empty)
+  | otherwise = Node lvl key val Empty (insert' k v rAA)
+insert' k v (Node lvl key val lAA Empty)
   | key == k = Node lvl key val lAA Empty
   | k > key = Node lvl key val Empty (Node (lvl+1) k v Empty Empty)
-  | otherwise = Node lvl key val (insert k v lAA) Empty
-insert k v (Node lvl key val lAA rAA)
+  | otherwise = Node lvl key val (insert' k v lAA) Empty
+insert' k v (Node lvl key val lAA rAA)
   | key == k = Node lvl key val lAA rAA
-  | k < key = Node lvl key val (insert k v lAA) rAA
-  | otherwise = Node lvl key val lAA (insert k v rAA)
+  | k < key = Node lvl key val (insert' k v lAA) rAA
+  | otherwise = Node lvl key val lAA (insert' k v rAA)
 
 -- reduce arbol a bool
 encontrarKey :: Eq k => k -> AA k a -> Bool
