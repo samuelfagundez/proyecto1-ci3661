@@ -3,6 +3,7 @@ module AA (
     empty,
     isEmpty,
     lookup,
+    insert,
     insert',
     encontrarKey,
     mapAA,
@@ -81,6 +82,13 @@ split (Node lvl key val lAA (Node lvlR keyR valR lAAR Empty)) = Node lvl key val
 split (Node lvl key val lAA (Node lvlR keyR valR lAAR (Node lvlR2 keyR2 valR2 lAAR2 rAAR2)))
   | lvl == lvlR2 = Node (lvlR+1) keyR valR (Node lvl key val lAA lAAR) (Node lvlR2 keyR2 valR2 lAAR2 rAAR2)
   | otherwise = Node lvl key val lAA (Node lvlR keyR valR lAAR (Node lvlR2 keyR2 valR2 lAAR2 rAAR2))
+
+insert :: (Ord k) => k -> v -> AA k v -> AA k v
+insert k v Empty = Node 1 k v Empty Empty
+insert k v (Node lvl key val lAA rAA)
+  | k < key = split (skew (Node lvl key val (insert k v lAA) rAA))
+  | k > key = split(skew (Node lvl key val lAA (insert k v rAA)))
+  | otherwise = Node lvl key val lAA rAA
 
 insert' :: (Ord k) => k -> v -> AA k v -> AA k v
 insert' k v Empty = Node 0 k v Empty Empty
