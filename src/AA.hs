@@ -36,9 +36,11 @@ data AA k a = Empty
             } deriving (Show, Read, Eq, Ord)
 
 data Invariantes = Valido
-                | ClaveRepetida
-                | NivelesInvalidos
-                -- maybe meter tipos???
+                | NivelDeHojaInvalido
+                | NivelDeHijoIzquierdoRespectoASuPadreInvalido
+                | NivelDeHijoDerechoRespectoASuPadreInvalido
+                | NivelDeNIetoDerechoInvalido
+                | NumeroDeHijosInvalido
                 deriving (Show)
 
 --- Permite usar foldr en el arbol y triggerea esta funcion
@@ -120,11 +122,45 @@ areLevelsValid (Node lv k v Empty (Node lvR kR vR lR rR)) = lv == lvR - 1 && are
 areLevelsValid (Node lv k v (Node lvL kL vL lL rL) Empty) =  lv == lvL - 1 && areLevelsValid (Node lvL kL vL lL rL)
 areLevelsValid (Node lv k v (Node lvL kL vL lL rL) (Node lvR kR vR lR rR)) = lv == lvL-1 && lv == lvR-1 && areLevelsValid (Node lvL kL vL lL rL) && areLevelsValid (Node lvR kR vR lR rR)
 
+-- Invariantes
+    -- 1. The level of every leaf node is one.
+    -- 2. The level of every left child is exactly one less than that of its parent.
+    -- 3. The level of every right child is equal to or one less than that of its parent.
+    -- 4. The level of every right grandchild is strictly less than that of its grandparent.
+    -- 5. Every node of level greater than one has two children.
+
+esInvariante1Valido :: AA k a -> Bool
+esInvariante1Valido (Node lvl key value Empty Empty) = lvl == 1
+esInvariante1Valido _ = True
+
+esInvariante2Valido :: AA k a -> Bool
+esInvariante2Valido Empty = True
+esInvariante2Valido (Node lvl key value Empty _) = True
+esInvariante2Valido (Node lvl key value (Node lvlL keyL valueL lAAL rAAL) rAA) = (lvl-1) == lvlL && (esInvariante2Valido (Node lvlL keyL valueL lAAL rAAL) && esInvariante2Valido rAA)
+
+esInvariante3Valido :: AA k a -> Bool
+esInvariante3Valido Empty = True
+esInvariante3Valido (Node lvl key value _ Empty) = True
+esInvariante3Valido (Node lvl key value lAA (Node lvlR keyR valueR lAAR rAAR)) = ((lvl-1) == lvlR || lvl == lvlR) && (esInvariante3Valido lAA && esInvariante3Valido (Node lvlR keyR valueR lAAR rAAR))
+
+esInvariante4Valido :: AA k a -> Bool
+esInvariante4Valido _ = True
+
+esInvariante5Valido :: AA k a -> Bool
+esInvariante5Valido Empty = True
+esInvariante5Valido (Node lvl key value Empty Empty) = True
+esInvariante5Valido (Node lvl key value Empty rAA) = lvl <= 1 && esInvariante5Valido rAA
+esInvariante5Valido (Node lvl key value lAA Empty) =  lvl <= 1 && esInvariante5Valido lAA
+esInvariante5Valido (Node lvl key value lAA rAA) = lvl >= 2 && (esInvariante5Valido lAA && esInvariante5Valido rAA)
+
+
 -- Aca podemos llamar a las funciones que hemos hecho para verificar los invariantes que hayamos definido en Invariantes
 checkInvariants :: (Eq k) => AA k a -> Invariantes
 -- Primero revisa las llaves
 checkInvariants tree
--- encontrar ids repetidos se puede cambiar por transformar el arbol a una lista y luego hacer 1 filter por cada elemento, pero por ahora funciona
-  | foldAAById (\key acc -> acc || foldAAById (\key2 acc2 -> if key2 == key then acc2+1 else acc2) 0 tree > 1) False tree = ClaveRepetida
-  | not (areLevelsValid tree) = NivelesInvalidos
+  | not (esInvariante1Valido tree) = NivelDeHojaInvalido
+  | not (esInvariante2Valido tree) = NivelDeHijoIzquierdoRespectoASuPadreInvalido
+  | not (esInvariante3Valido tree) = NivelDeHijoDerechoRespectoASuPadreInvalido
+  | not (esInvariante4Valido tree) = NivelDeNIetoDerechoInvalido
+  | not (esInvariante5Valido tree) = NumeroDeHijosInvalido
   | otherwise = Valido
