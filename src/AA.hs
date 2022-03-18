@@ -4,27 +4,12 @@ module AA (
     isEmpty,
     lookup,
     insert,
-    insert',
-    encontrarKey,
     mapAA,
     foldAAById,
-    -- incluyendo por desarrollo, borrar luego
-    arbol,
     checkInvariants,
-    areLevelsValid
 )
 where
 import Prelude hiding (lookup)
-
--- cositas de pruebas
-aa :: (a,b) -> a
-arbol = Node 0 1 "Uno" (Node 1 2 "Dos" Empty Empty) (Node 1 3 "Tres" Empty Empty)
-arbolVacio = Empty
-aa (x,a) = x
-
--- k es el tipo de claves de busqueda en el diccionario string, number, whatever
--- a es el tipo de los valores almacenados en el diccionario
--- lvl nivel del nodo
 
 data AA k a = Empty
             | Node {
@@ -92,28 +77,13 @@ insert k v (Node lvl key val lAA rAA)
   | k > key = split(skew (Node lvl key val lAA (insert k v rAA)))
   | otherwise = Node lvl key val lAA rAA
 
-insert' :: (Ord k) => k -> v -> AA k v -> AA k v
-insert' k v Empty = Node 0 k v Empty Empty
-insert' k v (Node lvl key val Empty rAA)
-  | key == k = Node lvl key val Empty rAA
-  | k < key = Node lvl key val (Node (lvl+1) k v Empty Empty) rAA
-  | otherwise = Node lvl key val Empty (insert' k v rAA)
-insert' k v (Node lvl key val lAA Empty)
-  | key == k = Node lvl key val lAA Empty
-  | k > key = Node lvl key val Empty (Node (lvl+1) k v Empty Empty)
-  | otherwise = Node lvl key val (insert' k v lAA) Empty
-insert' k v (Node lvl key val lAA rAA)
-  | key == k = Node lvl key val lAA rAA
-  | k < key = Node lvl key val (insert' k v lAA) rAA
-  | otherwise = Node lvl key val lAA (insert' k v rAA)
-
 -- reduce arbol a bool
-encontrarKey :: Eq k => k -> AA k a -> Bool
-encontrarKey k Empty = False
-encontrarKey k tree = foldAAById (\key acc -> acc || key == k) False tree
+findKey :: Eq k => k -> AA k a -> Bool
+findKey k Empty = False
+findKey k tree = foldAAById (\key acc -> acc || key == k) False tree
 
 lookup :: Eq k => k -> AA k a -> Maybe (AA k a)
-lookup k tree = if encontrarKey k tree then Just tree else Nothing
+lookup k tree = if findKey k tree then Just tree else Nothing
 
 areLevelsValid :: AA k a -> Bool
 areLevelsValid Empty = True
@@ -129,39 +99,39 @@ areLevelsValid (Node lv k v (Node lvL kL vL lL rL) (Node lvR kR vR lR rR)) = lv 
     -- 4. The level of every right grandchild is strictly less than that of its grandparent.
     -- 5. Every node of level greater than one has two children.
 
-esInvariante1Valido :: AA k a -> Bool
-esInvariante1Valido (Node lvl key value Empty Empty) = lvl == 1
-esInvariante1Valido _ = True
+isValidInvariant1 :: AA k a -> Bool
+isValidInvariant1 (Node lvl key value Empty Empty) = lvl == 1
+isValidInvariant1 _ = True
 
-esInvariante2Valido :: AA k a -> Bool
-esInvariante2Valido Empty = True
-esInvariante2Valido (Node _ _ _ Empty _) = True
-esInvariante2Valido (Node lvl _ _ (Node lvlL keyL valueL lAAL rAAL) rAA) = (lvl-1) == lvlL && (esInvariante2Valido (Node lvlL keyL valueL lAAL rAAL) && esInvariante2Valido rAA)
+isValidInvariant2 :: AA k a -> Bool
+isValidInvariant2 Empty = True
+isValidInvariant2 (Node _ _ _ Empty _) = True
+isValidInvariant2 (Node lvl _ _ (Node lvlL keyL valueL lAAL rAAL) rAA) = (lvl-1) == lvlL && (isValidInvariant2 (Node lvlL keyL valueL lAAL rAAL) && isValidInvariant2 rAA)
 
-esInvariante3Valido :: AA k a -> Bool
-esInvariante3Valido Empty = True
-esInvariante3Valido (Node _ _ _ _ Empty) = True
-esInvariante3Valido (Node lvl _ _ lAA (Node lvlR keyR valueR lAAR rAAR)) = ((lvl-1) == lvlR || lvl == lvlR) && (esInvariante3Valido lAA && esInvariante3Valido (Node lvlR keyR valueR lAAR rAAR))
+isValidInvariant3 :: AA k a -> Bool
+isValidInvariant3 Empty = True
+isValidInvariant3 (Node _ _ _ _ Empty) = True
+isValidInvariant3 (Node lvl _ _ lAA (Node lvlR keyR valueR lAAR rAAR)) = ((lvl-1) == lvlR || lvl == lvlR) && (isValidInvariant3 lAA && isValidInvariant3 (Node lvlR keyR valueR lAAR rAAR))
 
-esInvariante4Valido :: AA k a -> Bool
-esInvariante4Valido Empty = True
-esInvariante4Valido (Node _ _ _ _ Empty) = True
-esInvariante4Valido (Node _ _ _ _ (Node _ _ _ _ Empty)) = True
-esInvariante4Valido (Node lvl _ _ lAA ((Node _ _ _ _ ((Node lvlR2 keyR2 valueR2 lAAR2 rAAR2))))) = lvl > lvlR2 && (esInvariante4Valido lAA && esInvariante4Valido (Node lvlR2 keyR2 valueR2 lAAR2 rAAR2))
+isValidInvariant4 :: AA k a -> Bool
+isValidInvariant4 Empty = True
+isValidInvariant4 (Node _ _ _ _ Empty) = True
+isValidInvariant4 (Node _ _ _ _ (Node _ _ _ _ Empty)) = True
+isValidInvariant4 (Node lvl _ _ lAA ((Node _ _ _ _ ((Node lvlR2 keyR2 valueR2 lAAR2 rAAR2))))) = lvl > lvlR2 && (isValidInvariant4 lAA && isValidInvariant4 (Node lvlR2 keyR2 valueR2 lAAR2 rAAR2))
 
-esInvariante5Valido :: AA k a -> Bool
-esInvariante5Valido Empty = True
-esInvariante5Valido (Node _ _ _ Empty Empty) = True
-esInvariante5Valido (Node lvl _ _ Empty rAA) = lvl <= 1 && esInvariante5Valido rAA
-esInvariante5Valido (Node lvl _ _ lAA Empty) =  lvl <= 1 && esInvariante5Valido lAA
-esInvariante5Valido (Node lvl _ value lAA rAA) = lvl >= 2 && (esInvariante5Valido lAA && esInvariante5Valido rAA)
+isValidInvariant5 :: AA k a -> Bool
+isValidInvariant5 Empty = True
+isValidInvariant5 (Node _ _ _ Empty Empty) = True
+isValidInvariant5 (Node lvl _ _ Empty rAA) = lvl <= 1 && isValidInvariant5 rAA
+isValidInvariant5 (Node lvl _ _ lAA Empty) =  lvl <= 1 && isValidInvariant5 lAA
+isValidInvariant5 (Node lvl _ value lAA rAA) = lvl >= 2 && (isValidInvariant5 lAA && isValidInvariant5 rAA)
 
 
 checkInvariants :: (Eq k) => AA k a -> Invariantes
 checkInvariants tree
-  | not (esInvariante1Valido tree) = NivelDeHojaInvalido
-  | not (esInvariante2Valido tree) = NivelDeHijoIzquierdoRespectoASuPadreInvalido
-  | not (esInvariante3Valido tree) = NivelDeHijoDerechoRespectoASuPadreInvalido
-  | not (esInvariante4Valido tree) = NivelDeNietoDerechoInvalido
-  | not (esInvariante5Valido tree) = NumeroDeHijosInvalido
+  | not (isValidInvariant1 tree) = NivelDeHojaInvalido
+  | not (isValidInvariant2 tree) = NivelDeHijoIzquierdoRespectoASuPadreInvalido
+  | not (isValidInvariant3 tree) = NivelDeHijoDerechoRespectoASuPadreInvalido
+  | not (isValidInvariant4 tree) = NivelDeNietoDerechoInvalido
+  | not (isValidInvariant5 tree) = NumeroDeHijosInvalido
   | otherwise = Valido
