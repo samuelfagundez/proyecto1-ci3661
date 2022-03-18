@@ -39,7 +39,7 @@ data Invariantes = Valido
                 | NivelDeHojaInvalido
                 | NivelDeHijoIzquierdoRespectoASuPadreInvalido
                 | NivelDeHijoDerechoRespectoASuPadreInvalido
-                | NivelDeNIetoDerechoInvalido
+                | NivelDeNietoDerechoInvalido
                 | NumeroDeHijosInvalido
                 deriving (Show)
 
@@ -135,32 +135,33 @@ esInvariante1Valido _ = True
 
 esInvariante2Valido :: AA k a -> Bool
 esInvariante2Valido Empty = True
-esInvariante2Valido (Node lvl key value Empty _) = True
-esInvariante2Valido (Node lvl key value (Node lvlL keyL valueL lAAL rAAL) rAA) = (lvl-1) == lvlL && (esInvariante2Valido (Node lvlL keyL valueL lAAL rAAL) && esInvariante2Valido rAA)
+esInvariante2Valido (Node _ _ _ Empty _) = True
+esInvariante2Valido (Node lvl _ _ (Node lvlL keyL valueL lAAL rAAL) rAA) = (lvl-1) == lvlL && (esInvariante2Valido (Node lvlL keyL valueL lAAL rAAL) && esInvariante2Valido rAA)
 
 esInvariante3Valido :: AA k a -> Bool
 esInvariante3Valido Empty = True
-esInvariante3Valido (Node lvl key value _ Empty) = True
-esInvariante3Valido (Node lvl key value lAA (Node lvlR keyR valueR lAAR rAAR)) = ((lvl-1) == lvlR || lvl == lvlR) && (esInvariante3Valido lAA && esInvariante3Valido (Node lvlR keyR valueR lAAR rAAR))
+esInvariante3Valido (Node _ _ _ _ Empty) = True
+esInvariante3Valido (Node lvl _ _ lAA (Node lvlR keyR valueR lAAR rAAR)) = ((lvl-1) == lvlR || lvl == lvlR) && (esInvariante3Valido lAA && esInvariante3Valido (Node lvlR keyR valueR lAAR rAAR))
 
 esInvariante4Valido :: AA k a -> Bool
-esInvariante4Valido _ = True
+esInvariante4Valido Empty = True
+esInvariante4Valido (Node _ _ _ _ Empty) = True
+esInvariante4Valido (Node _ _ _ _ (Node _ _ _ _ Empty)) = True
+esInvariante4Valido (Node lvl _ _ lAA ((Node _ _ _ _ ((Node lvlR2 keyR2 valueR2 lAAR2 rAAR2))))) = lvl > lvlR2 && (esInvariante4Valido lAA && esInvariante4Valido (Node lvlR2 keyR2 valueR2 lAAR2 rAAR2))
 
 esInvariante5Valido :: AA k a -> Bool
 esInvariante5Valido Empty = True
-esInvariante5Valido (Node lvl key value Empty Empty) = True
-esInvariante5Valido (Node lvl key value Empty rAA) = lvl <= 1 && esInvariante5Valido rAA
-esInvariante5Valido (Node lvl key value lAA Empty) =  lvl <= 1 && esInvariante5Valido lAA
-esInvariante5Valido (Node lvl key value lAA rAA) = lvl >= 2 && (esInvariante5Valido lAA && esInvariante5Valido rAA)
+esInvariante5Valido (Node _ _ _ Empty Empty) = True
+esInvariante5Valido (Node lvl _ _ Empty rAA) = lvl <= 1 && esInvariante5Valido rAA
+esInvariante5Valido (Node lvl _ _ lAA Empty) =  lvl <= 1 && esInvariante5Valido lAA
+esInvariante5Valido (Node lvl _ value lAA rAA) = lvl >= 2 && (esInvariante5Valido lAA && esInvariante5Valido rAA)
 
 
--- Aca podemos llamar a las funciones que hemos hecho para verificar los invariantes que hayamos definido en Invariantes
 checkInvariants :: (Eq k) => AA k a -> Invariantes
--- Primero revisa las llaves
 checkInvariants tree
   | not (esInvariante1Valido tree) = NivelDeHojaInvalido
   | not (esInvariante2Valido tree) = NivelDeHijoIzquierdoRespectoASuPadreInvalido
   | not (esInvariante3Valido tree) = NivelDeHijoDerechoRespectoASuPadreInvalido
-  | not (esInvariante4Valido tree) = NivelDeNIetoDerechoInvalido
+  | not (esInvariante4Valido tree) = NivelDeNietoDerechoInvalido
   | not (esInvariante5Valido tree) = NumeroDeHijosInvalido
   | otherwise = Valido
