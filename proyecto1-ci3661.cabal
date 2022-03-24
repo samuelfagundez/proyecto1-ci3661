@@ -29,6 +29,7 @@ library
       Lib
       Match
       Play
+      Solve
       Util
   other-modules:
       Paths_proyecto1_ci3661
