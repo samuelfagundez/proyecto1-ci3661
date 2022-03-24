@@ -6,6 +6,7 @@ import AA
 import Match
 import Util (loadDictionary, dictionary)
 import System.Random
+import Data.Char
 
 data GameState = GS { played :: Int
                     , won    :: Int
@@ -50,3 +51,12 @@ pickTarget t = do
                 let treeToTarget = foldr (\x acc -> T x : acc) [] t
                 rNum <- randomRIO (0, length treeToTarget - 1)
                 return $ treeToTarget!!rNum 
+
+-- It doesn't work because we need to handle the "backspace" and "enter" keystrokes operation
+-- so I require a new function firm which is going to be:
+-- readFive :: firstChar -> secondChar -> thirdChar -> fourthChar -> fifthChar -> sixthChar -> IO String
+-- readFive a b c d e Enter = 
+readFive :: IO String 
+readFive = do
+            content <- sequence [getChar,getChar,getChar,getChar,getChar]
+            return $ [ toLower loweredString | loweredString <- content]
