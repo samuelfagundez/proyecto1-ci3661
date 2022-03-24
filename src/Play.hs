@@ -1,3 +1,5 @@
+{-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
+{-# HLINT ignore "Use map" #-}
 module Play
 where
 import AA
@@ -42,6 +44,9 @@ initialState = do
 --             gameState <- initialState
 --             return $ playTheGame gameState
 
-pickTarget :: AA.AA String String -> Target
-pickTarget (Node _ _ value _ _) = T value
-pickTarget _ = T ""
+pickTarget :: AA.AA String String -> IO Target
+pickTarget Empty = return $ T ""
+pickTarget t = do
+                let treeToTarget = foldr (\x acc -> T x : acc) [] t
+                rNum <- randomRIO (0, length treeToTarget - 1)
+                return $ treeToTarget!!rNum 
