@@ -24,9 +24,9 @@ instance Show Guess where
 
 --El formato esta bien, más no consigo como hacer que los EMOJIS se muestren por consola, se muestra es su representación numerica
 instance Show Match where
-  show (Absent c) = show ("⬛" ++ [c])
-  show (Misplaced c) = show ("🟨" ++ [c])
-  show (Correct c) = show ("🟩" ++ [c])
+  show (Absent c) = "⬛" ++ [c]
+  show (Misplaced c) = "🟨" ++ [c]
+  show (Correct c) = "🟩" ++ [c]
 
 --Como hacer que lea las representaciones de Match,
 instance Read Match where
