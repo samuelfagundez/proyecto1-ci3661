@@ -36,6 +36,7 @@ library
       src
   build-depends:
       base >=4.7 && <5
+    , random >=1.1
   default-language: Haskell2010
 
 executable proyecto1-ci3661-exe
@@ -48,6 +49,7 @@ executable proyecto1-ci3661-exe
   build-depends:
       base >=4.7 && <5
     , proyecto1-ci3661
+    , random >=1.1
   default-language: Haskell2010
 
 test-suite proyecto1-ci3661-test
@@ -61,4 +63,5 @@ test-suite proyecto1-ci3661-test
   build-depends:
       base >=4.7 && <5
     , proyecto1-ci3661
+    , random >=1.1
   default-language: Haskell2010

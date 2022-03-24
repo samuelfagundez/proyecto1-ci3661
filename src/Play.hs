@@ -3,6 +3,7 @@ where
 import AA
 import Match
 import Util (loadDictionary, dictionary)
+import System.Random
 
 data GameState = GS { played :: Int
                     , won    :: Int
@@ -26,9 +27,6 @@ initialState = do
                 dictionaryTree <- loadDictionary dictionary
                 return $ GS 0 0 0 (T "") dictionaryTree
 
--- getRandomWord :: String
--- getRandomWord = "abcde"
-
 -- playTheGame :: IO GameState -> String
 -- playTheGame gs = do
 --                 show gs
@@ -43,3 +41,7 @@ initialState = do
 -- fakeMain = do
 --             gameState <- initialState
 --             return $ playTheGame gameState
+
+pickTarget :: AA.AA String String -> Target
+pickTarget (Node _ _ value _ _) = T value
+pickTarget _ = T ""
