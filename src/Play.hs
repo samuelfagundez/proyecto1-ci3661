@@ -7,13 +7,17 @@ import Match
 import Util (loadDictionary, dictionary)
 import System.Random
 import Data.Char
-
+clear = putStr "\ESC[2J"
 data GameState = GS { played :: Int
                     , won    :: Int
                     , streak :: Int
                     , target :: Target
                     , dict   :: AA.AA String String
 }
+
+pop :: [a] -> [a]
+pop [] = []
+pop xs = init xs
 
 data Result = Win Target | Lose Target
 
@@ -50,13 +54,24 @@ pickTarget Empty = return $ T ""
 pickTarget t = do
                 let treeToTarget = foldr (\x acc -> T x : acc) [] t
                 rNum <- randomRIO (0, length treeToTarget - 1)
-                return $ treeToTarget!!rNum 
+                return $ treeToTarget!!rNum
 
--- It doesn't work because we need to handle the "backspace" and "enter" keystrokes operation
--- so I require a new function firm which is going to be:
--- readFive :: firstChar -> secondChar -> thirdChar -> fourthChar -> fifthChar -> sixthChar -> IO String
--- readFive a b c d e Enter = 
-readFive :: IO String 
-readFive = do
-            content <- sequence [getChar,getChar,getChar,getChar,getChar]
-            return $ [ toLower loweredString | loweredString <- content]
+readFive :: IO [Char] -> IO [Char]
+readFive s = do
+                putStrLn "\ESC[2J"
+                paramString <- s
+                putStrLn paramString
+                readChar <- getChar
+                let newString = paramString ++ [readChar]
+                if length paramString == 5 && readChar == '\n'
+                  then
+                    return $ pop $ auxToLower newString
+                  else
+                    if (readChar == '\DEL' || readChar == '\BS') && not (null paramString)
+                      then
+                        readFive $ return $ pop $ auxToLower paramString
+                      else
+                        if isLetter readChar
+                          then readFive $ return $ auxToLower newString
+                          else readFive s
+                where auxToLower s = [ toLower loweredString | loweredString <- s]
