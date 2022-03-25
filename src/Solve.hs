@@ -4,13 +4,15 @@ module Solve
   ( Solver (..),
     initialSolver,
     solveTheGame,
+    sieve,
+    cleverpick,
   )
 where
 
 import AA
 import Match
 import System.Random
-import Text.Read (readMaybe)
+import Text.Read (Lexeme (Char, String), readMaybe)
 import Util (dictionary, loadDictionary, turns, yesOrNo)
 
 data Solver = Naive | Clever
@@ -95,12 +97,12 @@ sieve [] [] = []
 sieve xs ys =
   let token = decompose [[], [], []] (zip xs [0 .. 4])
    in foldr (\s -> ((checkCorrect (token !! 2) $ checkMisplaced (token !! 1) $ checkAbsents (token !! 0) s) ++)) [] ys
-  where
-    decompose rs [] = rs
-    decompose rs ((z, a) : zs) = case z of
-      Absent w -> decompose [(rs !! 0) ++ [(w, a)], rs !! 1, rs !! 2] zs
-      Misplaced w -> decompose [rs !! 0, rs !! 1 ++ [(w, a)], rs !! 2] zs
-      Correct w -> decompose [rs !! 0, rs !! 1, rs !! 2 ++ [(w, a)]] zs
+
+decompose rs [] = rs
+decompose rs ((z, a) : zs) = case z of
+  Absent w -> decompose [(rs !! 0) ++ [(w, a)], rs !! 1, rs !! 2] zs
+  Misplaced w -> decompose [rs !! 0, rs !! 1 ++ [(w, a)], rs !! 2] zs
+  Correct w -> decompose [rs !! 0, rs !! 1, rs !! 2 ++ [(w, a)]] zs
 
 checkAbsents :: [(Char, Int)] -> String -> String
 checkAbsents _ [] = []
@@ -114,7 +116,7 @@ checkMisplaced :: [(Char, Int)] -> String -> String
 checkMisplaced _ [] = []
 checkMisplaced [] palabra = palabra
 checkMisplaced xs palabra =
-  if foldr (\(a, _) -> (a `elem` palabra ||)) False xs
+  if foldr (\(a, c) -> ((a `elem` palabra && (a /= palabra !! c)) ||)) False xs
     then palabra
     else []
 
@@ -131,7 +133,7 @@ naive xs (GS sugg poss rem dict stra) =
   do
     let posibles = sieve xs poss
     let size = length posibles
-    r <- randomRIO (0, size)
+    r <- randomRIO (0, size -1)
     return $ GS (posibles !! r) posibles size dict stra
 
 --Donde Va Hola tiene que ir un selector al Azar y se coloca posibles!!(selector al azar entre 0 y lentgh posibles)
@@ -139,4 +141,22 @@ naive xs (GS sugg poss rem dict stra) =
 clever :: [Match] -> SolverState -> SolverState
 clever xs (GS sugg poss rem dict stra) =
   let posibles = sieve xs poss
-   in GS "hola" posibles (length posibles) dict stra
+   in GS (cleverpick posibles) posibles (length posibles) dict stra
+
+cleverpick :: [String] -> String
+cleverpick = foldr compareS ""
+  where
+    compareS w z
+      | w == "" = z
+      | z == "" = w
+      | otherwise =
+        if points w 0 >= points z 0
+          then w
+          else z
+      where
+        points :: [Char] -> Int -> Int
+        points [] n = n
+        points (l : ls) n =
+          if l `elem` ls
+            then points ls n
+            else points ls (n + 1)
