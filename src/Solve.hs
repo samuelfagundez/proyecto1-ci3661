@@ -41,14 +41,17 @@ initialSolver x
     return $ GS [] (foldr (\k -> ([k] ++)) [] dictionarytree) (foldr (\k -> (1 +)) 0 dictionarytree) dictionarytree Naive
 
 --solveTheGame::
-solveTheGame x =
+solveTheGame (GS a xs r tree stra) =
   do
-    solveTheGameTurnos x 1
+    solveTheGameTurnos (GS a xs r tree stra) 1
     c <- yesOrNo "Solve Another"
     if c
-      then solveTheGameTurnos x 1
-      else return x
+      then do
+        f <- solveTheGame (GS "" (foldr (\k -> ([k] ++)) [] tree) (foldr (\k -> (1 +)) 0 tree) tree stra)
+        putStr ""
+      else putStr ""
 
+--solveTheGameTurnos :: Monad m => SolverState -> p -> m SolverState
 solveTheGameTurnos (GS a xs r tree stra) n
   | n <= turns && r == 1 =
     do
