@@ -73,7 +73,7 @@ playTheGame gs = do
     else return playedGs
 
 play :: Int -> IO GameState -> IO GameState
-play 1 gs = do
+play 0 gs = do
   (GS played won streak target dict) <- gs
   return (GS (played+1) won streak target dict)
 play remainingTurns gs = do
@@ -84,7 +84,7 @@ play remainingTurns gs = do
     putStr $ "Guess " ++ show (turns - remainingTurns + 1) ++ "? "
     guessWord <- readFive $ return ""
     let gameResult = match (G guessWord) target
-    if remainingTurns == 2
+    if remainingTurns == 1
       then 
         putStr $ "Your guess '" ++ guessWord ++ "' is not a valid word!"
       else
