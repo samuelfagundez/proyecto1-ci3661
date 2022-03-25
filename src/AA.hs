@@ -6,7 +6,6 @@ module AA (
     insert,
     mapAA,
     foldAAById,
-    checkInvariants,
 )
 where
 import Prelude hiding (lookup)
@@ -28,7 +27,6 @@ data Invariantes = Valido
                 | NumeroDeHijosInvalido
                 deriving (Show)
 
---- Permite usar foldr en el arbol y triggerea esta funcion
 foldAAByValue :: (a -> b -> b) -> b -> AA k a -> b
 foldAAByValue f b Empty = b
 foldAAByValue f b (Node lv k v l r) = foldAAByValue f (f v (foldAAByValue f b r)) l
@@ -37,7 +35,6 @@ foldAAById :: (k -> b -> b) -> b -> AA k a -> b
 foldAAById f b Empty = b
 foldAAById f b (Node lv k v l r) = foldAAById f (f k (foldAAById f b r)) l
 
--- Permite usar fmap en el arbol
 mapAA :: (a -> b) -> AA k a -> AA k b
 mapAA f Empty = Empty
 mapAA f (Node lvl key val lAA rAA) = Node lvl key (f val) (mapAA f lAA) (mapAA f rAA)

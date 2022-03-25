@@ -3,11 +3,10 @@
 module Play
 where
 import AA
-import Match
+import Match ( fullmatch, match, Guess(G), Target(..) )
 import Util (loadDictionary, dictionary, turns)
-import System.Random
-import Data.Char
-clear = putStr "\ESC[2J"
+import System.Random ( Random(randomRIO) )
+import Data.Char ( isLetter, toLower )
 data GameState = GS { played :: Int
                     , won    :: Int
                     , streak :: Int
@@ -33,11 +32,6 @@ initialState :: IO GameState
 initialState = do
                 dictionaryTree <- loadDictionary dictionary
                 return $ GS 0 0 0 (T "") dictionaryTree
-
--- fakeMain :: IO String
--- fakeMain = do
---             gameState <- initialState
---             return $ playTheGame gameState
 
 pickTarget :: AA.AA String String -> IO Target
 pickTarget Empty = return $ T ""
