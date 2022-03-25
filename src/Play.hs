@@ -4,7 +4,7 @@ module Play
 where
 import AA
 import Match
-import Util (loadDictionary, dictionary)
+import Util (loadDictionary, dictionary, turns)
 import System.Random
 import Data.Char
 clear = putStr "\ESC[2J"
@@ -34,16 +34,6 @@ initialState = do
                 dictionaryTree <- loadDictionary dictionary
                 return $ GS 0 0 0 (T "") dictionaryTree
 
--- playTheGame :: IO GameState -> String
--- playTheGame gs = do
---                 show gs
-
--- play :: targetWord -> IO GameState
--- play target = do
---         putStr "Guess N? "
---         guessNumber <- getChar
---         guess <- getLine
-
 -- fakeMain :: IO String
 -- fakeMain = do
 --             gameState <- initialState
@@ -58,7 +48,6 @@ pickTarget t = do
 
 readFive :: IO [Char] -> IO [Char]
 readFive s = do
-                putStrLn "\ESC[2J"
                 paramString <- s
                 putStrLn paramString
                 readChar <- getChar
@@ -75,3 +64,23 @@ readFive s = do
                           then readFive $ return $ auxToLower newString
                           else readFive s
                 where auxToLower s = [ toLower loweredString | loweredString <- s]
+
+playTheGame :: IO GameState -> IO GameState
+playTheGame gs = do
+  (GS played won streak target dict) <- gs
+  t <- pickTarget dict
+  play turns (return (GS played won streak t dict))
+
+play :: Int -> IO GameState -> IO GameState
+play 0 gs = do
+  (GS played won streak target dict) <- gs
+  return (GS (played+1) won streak target dict)
+play turns gs = do
+    (GS played won streak target dict) <- gs
+    putStr "Guess N? "
+    guessWord <- readFive $ return ""
+    let gameResult = match (G guessWord) target
+    putStr $ show gameResult
+    if fullmatch gameResult
+      then return (GS (played+1) (won+1) streak target dict)
+      else play (turns-1) gs

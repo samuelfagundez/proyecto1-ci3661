@@ -5,7 +5,7 @@ import System.IO
 import AA
 import Control.Monad
 import Control.Concurrent
-clear = putStr "\ESC[2J"
+-- clear = putStr "\ESC[2J"
 
 turns :: Int
 turns = 6
