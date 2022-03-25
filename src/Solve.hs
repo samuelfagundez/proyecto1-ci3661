@@ -9,7 +9,9 @@ where
 
 import AA
 import Match
-import Util (dictionary, loadDictionary, turns)
+import System.Random
+import Text.Read (readMaybe)
+import Util (dictionary, loadDictionary, turns, yesOrNo)
 
 data Solver = Naive | Clever
   deriving (Eq)
@@ -40,62 +42,22 @@ initialSolver x
 solveTheGame x =
   do
     solveTheGameTurnos x 1
-    putStr "Solve another (y/n)? "
-    c <- getChar
-    if c == 'y'
+    c <- yesOrNo "Solve Another"
+    if c
       then solveTheGameTurnos x 1
       else return x
 
-solveTheGameTurnos (GS "" xs r tree stra) n =
-  do
-    print (GS "" xs r tree stra)
-    putStr ("Hint " ++ show n ++ " 🤔?")
-    l <- getLine
-    let m = read l :: [Match]
-    if stra == Naive
-      then do
-        let j = naive m (GS "" xs r tree stra)
-        solveTheGameTurnos j (n + 1)
-      else do
-        let j = clever m (GS "" xs r tree stra)
-        solveTheGameTurnos j (n + 1)
 solveTheGameTurnos (GS a xs r tree stra) n
   | n <= turns && r == 1 =
     do
       print (GS a xs r tree stra)
       return (GS a xs r tree stra)
-  | n > 1 && n < (turns -1) = do
+  | n > 0 && n <= turns = do
     print (GS a xs r tree stra)
-    putStr ("Hint " ++ show n ++ " 🤔?")
-    l <- getLine
-    let m = read l :: [Match]
+    m <- reading n
     if stra == Naive
       then do
-        let j = naive m (GS a xs r tree stra)
-        solveTheGameTurnos j (n + 1)
-      else do
-        let j = clever m (GS a xs r tree stra)
-        solveTheGameTurnos j (n + 1)
-  | n == (turns -1) = do
-    print (GS a xs r tree stra)
-    putStr ("Hint " ++ show n ++ " 🙁?")
-    l <- getLine
-    let m = read l :: [Match]
-    if stra == Naive
-      then do
-        let j = naive m (GS a xs r tree stra)
-        solveTheGameTurnos j (n + 1)
-      else do
-        let j = clever m (GS a xs r tree stra)
-        solveTheGameTurnos j (n + 1)
-  | n == turns = do
-    print (GS a xs r tree stra)
-    putStr ("Hint " ++ show n ++ " 😬?")
-    l <- getLine
-    let m = read l :: [Match]
-    if stra == Naive
-      then do
-        let j = naive m (GS a xs r tree stra)
+        j <- naive m (GS a xs r tree stra)
         solveTheGameTurnos j (n + 1)
       else do
         let j = clever m (GS a xs r tree stra)
@@ -104,6 +66,29 @@ solveTheGameTurnos (GS a xs r tree stra) n
     print (GS a xs r tree stra)
     putStrLn "You lost! 🤭"
     return (GS a xs r tree stra)
+
+reading n
+  | n > 0 && n < (turns -1) = do
+    putStr ("Hint " ++ show n ++ " 🤔? ")
+    l <- getLine
+    let m = readMaybe l :: Maybe [Match]
+    case m of
+      Just y -> return y
+      Nothing -> reading n
+  | n == (turns -1) = do
+    putStr ("Hint " ++ show n ++ " 🙁? ")
+    l <- getLine
+    let m = readMaybe l :: Maybe [Match]
+    case m of
+      Just y -> return y
+      Nothing -> reading n
+  | n == turns = do
+    putStr ("Hint " ++ show n ++ " 😬? ")
+    l <- getLine
+    let m = readMaybe l :: Maybe [Match]
+    case m of
+      Just y -> return y
+      Nothing -> reading n
 
 sieve :: [Match] -> [String] -> [String]
 sieve [] [] = []
@@ -141,10 +126,13 @@ checkCorrect xs palabra =
     then [palabra]
     else []
 
-naive :: [Match] -> SolverState -> SolverState
+naive :: [Match] -> SolverState -> IO SolverState
 naive xs (GS sugg poss rem dict stra) =
-  let posibles = sieve xs poss
-   in GS "hola" posibles (length posibles) dict stra
+  do
+    let posibles = sieve xs poss
+    let size = length posibles
+    r <- randomRIO (0, size)
+    return $ GS (posibles !! r) posibles size dict stra
 
 --Donde Va Hola tiene que ir un selector al Azar y se coloca posibles!!(selector al azar entre 0 y lentgh posibles)
 
