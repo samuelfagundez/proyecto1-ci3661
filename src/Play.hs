@@ -71,7 +71,6 @@ playTheGame gs = do
   playedGs <- play turns (return (GS played won streak t dict))
   putStrLn ""
   print playedGs
-  putStrLn ""
   playAgain <- yesOrNo "Play again"
   if playAgain
     then

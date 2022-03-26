@@ -2,11 +2,11 @@ module Util where
 
 import Data.Char ( toLower )
 import AA ( AA, empty, insert )
-import GHC.IO.Handle (hSetEcho)
 import System.IO ( hSetEcho, stdin, stdout )
+import GHC.IO.Handle (BufferMode(..), hSetBuffering)
 
 turns :: Int
-turns = 3
+turns = 2
 
 dictionary :: FilePath
 dictionary = "american-english"
@@ -22,6 +22,9 @@ loadDictionary path = do contents <- readFile path
 
 yesOrNo :: String -> IO Bool
 yesOrNo s = do
+    hSetEcho stdout False
+    hSetEcho stdin False
+    hSetBuffering stdout NoBuffering
     putStr $ s ++ " (y/n)? "
     decision <- getChar
     if decision == 'y' || decision == 'n'
