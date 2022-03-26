@@ -6,6 +6,7 @@ import Match ( fullmatch, match, Guess(G), Target(..) )
 import Util (loadDictionary, dictionary, turns, yesOrNo)
 import System.Random ( Random(randomRIO) )
 import Data.Char ( isLetter, toLower )
+import System.IO ( hSetEcho, stdin, stdout )
 data GameState = GS { played :: Int
                     , won    :: Int
                     , streak :: Int
@@ -41,6 +42,8 @@ pickTarget t = do
 
 readFive :: IO [Char] -> IO [Char]
 readFive s = do
+                hSetEcho stdout False
+                hSetEcho stdin False
                 paramString <- s
                 putStrLn paramString
                 readChar <- getChar
@@ -96,8 +99,3 @@ play remainingTurns gs = do
       else
         do
           play (remainingTurns-1) gs
-
-
-test :: Maybe opcional -> IO ()
-test Nothing = putStrLn "nada"
-test opcional = putStrLn "funca"

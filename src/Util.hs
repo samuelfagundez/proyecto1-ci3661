@@ -2,6 +2,8 @@ module Util where
 
 import Data.Char ( toLower )
 import AA ( AA, empty, insert )
+import GHC.IO.Handle (hSetEcho)
+import System.IO ( hSetEcho, stdin, stdout )
 
 turns :: Int
 turns = 6
@@ -20,6 +22,8 @@ loadDictionary path = do contents <- readFile path
 
 yesOrNo :: String -> IO Bool
 yesOrNo s = do
+    hSetEcho stdout False
+    hSetEcho stdin False
     putStrLn $ s ++ " (y/n)?"
     decision <- getChar
     if decision == 'y' || decision == 'n'
