@@ -4,19 +4,19 @@ module Solve
   ( Solver (..),
     initialSolver,
     solveTheGame,
-    sieve,
-    cleverpick,
   )
 where
 
 import AA
+import GHC.IO.Handle
 import Match
+import System.IO
 import System.Random
 import Text.Read (Lexeme (Char, String), readMaybe)
 import Util (dictionary, loadDictionary, turns, yesOrNo)
 
 data Solver = Naive | Clever
-  deriving (Eq)
+  deriving (Eq, Read)
 
 data SolverState = GS
   { suggestion :: String,
@@ -48,8 +48,8 @@ solveTheGame (GS a xs r tree stra) =
     if c
       then do
         f <- solveTheGame (GS "" (foldr (\k -> ([k] ++)) [] tree) (foldr (\k -> (1 +)) 0 tree) tree stra)
-        putStr ""
-      else putStr ""
+        putStrLn ""
+      else putStrLn ""
 
 --solveTheGameTurnos :: Monad m => SolverState -> p -> m SolverState
 solveTheGameTurnos (GS a xs r tree stra) n
@@ -69,11 +69,13 @@ solveTheGameTurnos (GS a xs r tree stra) n
         solveTheGameTurnos j (n + 1)
   | n == (turns + 1) = do
     print (GS a xs r tree stra)
+    hSetBuffering stdout NoBuffering
     putStrLn "You lost! 🤭"
     return (GS a xs r tree stra)
 
 reading n
   | n > 0 && n < (turns -1) = do
+    hSetBuffering stdout NoBuffering
     putStr ("Hint " ++ show n ++ " 🤔? ")
     l <- getLine
     let m = readMaybe l :: Maybe [Match]
@@ -81,6 +83,7 @@ reading n
       Just y -> return y
       Nothing -> reading n
   | n == (turns -1) = do
+    hSetBuffering stdout NoBuffering
     putStr ("Hint " ++ show n ++ " 🙁? ")
     l <- getLine
     let m = readMaybe l :: Maybe [Match]
@@ -88,6 +91,7 @@ reading n
       Just y -> return y
       Nothing -> reading n
   | n == turns = do
+    hSetBuffering stdout NoBuffering
     putStr ("Hint " ++ show n ++ " 😬? ")
     l <- getLine
     let m = readMaybe l :: Maybe [Match]
