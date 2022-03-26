@@ -48,18 +48,21 @@ readFive s = do
                 putStrLn paramString
                 readChar <- getChar
                 let newString = paramString ++ [readChar]
-                if length paramString == 5 && readChar == '\n'
-                  then
-                    return $ pop $ auxToLower newString
+                if length paramString == 5 && readChar /= '\n' && readChar /= '\DEL' && readChar /= '\BS'
+                  then readFive s
                   else
-                    if (readChar == '\DEL' || readChar == '\BS') && not (null paramString)
+                    if length paramString == 5 && readChar == '\n'
                       then
-                        readFive $ return $ pop $ auxToLower paramString
+                        return $ pop $ auxToLower newString
                       else
-                        if isLetter readChar
-                          then readFive $ return $ auxToLower newString
-                          else readFive s
-                where auxToLower s = [ toLower loweredString | loweredString <- s]
+                        if (readChar == '\DEL' || readChar == '\BS') && not (null paramString)
+                          then
+                            readFive $ return $ pop $ auxToLower paramString
+                          else
+                            if isLetter readChar
+                              then readFive $ return $ auxToLower newString
+                              else readFive s
+                    where auxToLower s = [ toLower loweredString | loweredString <- s]
 
 playTheGame :: IO GameState -> IO ()
 playTheGame gs = do

@@ -6,7 +6,7 @@ import GHC.IO.Handle (hSetEcho)
 import System.IO ( hSetEcho, stdin, stdout )
 
 turns :: Int
-turns = 6
+turns = 3
 
 dictionary :: FilePath
 dictionary = "american-english"
@@ -22,9 +22,7 @@ loadDictionary path = do contents <- readFile path
 
 yesOrNo :: String -> IO Bool
 yesOrNo s = do
-    hSetEcho stdout False
-    hSetEcho stdin False
-    putStrLn $ s ++ " (y/n)?"
+    putStr $ s ++ " (y/n)? "
     decision <- getChar
     if decision == 'y' || decision == 'n'
         then return $ decision == 'y'
