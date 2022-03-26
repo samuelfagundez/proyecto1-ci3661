@@ -1,6 +1,6 @@
 {-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
 {-# HLINT ignore "Use map" #-}
-module Play where
+module Play (playTheGame, initialState) where 
 import AA
 import Match ( fullmatch, match, Guess(G), Target(..) )
 import Util (loadDictionary, dictionary, turns, yesOrNo)
@@ -58,19 +58,21 @@ readFive s = do
                           else readFive s
                 where auxToLower s = [ toLower loweredString | loweredString <- s]
 
-playTheGame :: IO GameState -> IO GameState
+playTheGame :: IO GameState -> IO ()
 playTheGame gs = do
   (GS played won streak target dict) <- gs
   t <- pickTarget dict
   playedGs <- play turns (return (GS played won streak t dict))
   putStrLn ""
+  print playedGs
+  putStrLn ""
   playAgain <- yesOrNo "Play again"
   if playAgain
-    then 
+    then
       do
         putStrLn ""
         playTheGame $ return playedGs
-    else return playedGs
+    else putStrLn ""
 
 play :: Int -> IO GameState -> IO GameState
 play 0 gs = do
@@ -85,12 +87,17 @@ play remainingTurns gs = do
     guessWord <- readFive $ return ""
     let gameResult = match (G guessWord) target
     if remainingTurns == 1
-      then 
+      then
         putStr $ "Your guess '" ++ guessWord ++ "' is not a valid word!"
       else
         putStr $ show gameResult
     if fullmatch gameResult
       then return (GS (played+1) (won+1) streak target dict)
-      else 
+      else
         do
           play (remainingTurns-1) gs
+
+
+test :: Maybe opcional -> IO ()
+test Nothing = putStrLn "nada"
+test opcional = putStrLn "funca"

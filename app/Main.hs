@@ -1,10 +1,6 @@
 module Main where
 
-import Lib
-import AA
-import Match
-import Util
-import Play
+import Play (playTheGame, initialState)
 
 main :: IO ()
-main = someFunc
+main = playTheGame initialState
