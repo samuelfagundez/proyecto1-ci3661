@@ -1,12 +1,12 @@
 {-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
 {-# HLINT ignore "Use map" #-}
-module Play (playTheGame, initialState) where 
+module Play where 
 import AA
 import Match ( fullmatch, match, Guess(G), Target(..) )
 import Util (loadDictionary, dictionary, turns, yesOrNo)
 import System.Random ( Random(randomRIO) )
 import Data.Char ( isLetter, toLower )
-import System.IO ( hSetEcho, stdin, stdout )
+import System.IO ( hSetEcho, stdin, stdout, hFlush )
 import GHC.IO.Handle (BufferMode(..), hSetBuffering)
 data GameState = GS { played :: Int
                     , won    :: Int
@@ -43,26 +43,31 @@ pickTarget t = do
 
 readFive :: IO [Char] -> IO [Char]
 readFive s = do
-                hSetEcho stdout False
-                hSetEcho stdin False
-                hSetBuffering stdout NoBuffering
                 paramString <- s
-                putStrLn paramString
+                hSetEcho stdin False
                 readChar <- getChar
-                let newString = paramString ++ [readChar]
                 if length paramString == 5 && readChar /= '\n' && readChar /= '\DEL' && readChar /= '\BS'
                   then readFive s
                   else
                     if length paramString == 5 && readChar == '\n'
                       then
-                        return $ pop $ auxToLower newString
+                        return $ pop $ auxToLower paramString ++ [readChar]
                       else
                         if (readChar == '\DEL' || readChar == '\BS') && not (null paramString)
                           then
-                            readFive $ return $ pop $ auxToLower paramString
+                            do
+                              putChar '\b'
+                              putChar ' '
+                              putChar '\b'
+                              readFive $ return $ pop $ auxToLower paramString
                           else
                             if isLetter readChar
-                              then readFive $ return $ auxToLower newString
+                              then 
+                                do
+                                  hFlush stdout
+                                  putChar readChar
+                                  hFlush stdout
+                                  readFive $ return $ auxToLower $ paramString ++ [readChar]
                               else readFive s
                     where auxToLower s = [ toLower loweredString | loweredString <- s]
 
@@ -90,14 +95,16 @@ play remainingTurns gs = do
     if remainingTurns < turns
       then putStrLn ""
       else putStr ""
+    hSetBuffering stdout NoBuffering
     putStr $ "Guess " ++ show (turns - remainingTurns + 1) ++ "? "
+    hSetEcho stdout True
     guessWord <- readFive $ return ""
     let gameResult = match (G guessWord) target
     if remainingTurns == 1
       then
-        putStr $ "Your guess '" ++ guessWord ++ "' is not a valid word!"
+        putStr $ " Your guess '" ++ guessWord ++ "' is not a valid word!"
       else
-        putStr $ show gameResult
+        putStr $ " " ++ show gameResult
     if fullmatch gameResult
       then return (GS (played+1) (won+1) (streak+1) target dict)
       else

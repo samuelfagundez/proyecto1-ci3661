@@ -123,7 +123,7 @@ checkMisplaced :: [(Char, Int)] -> String -> String
 checkMisplaced _ [] = []
 checkMisplaced [] palabra = palabra
 checkMisplaced xs palabra =
-  if foldr (\(a, c) -> ((a `elem` palabra && (a /= palabra !! c)) ||)) False xs
+  if foldr (\(a, c) -> ((a `elem` palabra && (a /= (palabra !! c))) ||)) False xs
     then palabra
     else []
 
