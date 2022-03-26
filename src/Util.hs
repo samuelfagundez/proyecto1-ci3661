@@ -6,7 +6,7 @@ import System.IO ( hSetEcho, stdin, stdout )
 import GHC.IO.Handle (BufferMode(..), hSetBuffering)
 
 turns :: Int
-turns = 2
+turns = 6
 
 dictionary :: FilePath
 dictionary = "american-english"

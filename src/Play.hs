@@ -7,6 +7,7 @@ import Util (loadDictionary, dictionary, turns, yesOrNo)
 import System.Random ( Random(randomRIO) )
 import Data.Char ( isLetter, toLower )
 import System.IO ( hSetEcho, stdin, stdout )
+import GHC.IO.Handle (BufferMode(..), hSetBuffering)
 data GameState = GS { played :: Int
                     , won    :: Int
                     , streak :: Int
@@ -44,6 +45,7 @@ readFive :: IO [Char] -> IO [Char]
 readFive s = do
                 hSetEcho stdout False
                 hSetEcho stdin False
+                hSetBuffering stdout NoBuffering
                 paramString <- s
                 putStrLn paramString
                 readChar <- getChar
@@ -82,7 +84,7 @@ playTheGame gs = do
 play :: Int -> IO GameState -> IO GameState
 play 0 gs = do
   (GS played won streak target dict) <- gs
-  return (GS (played+1) won streak target dict)
+  return (GS (played+1) won 0 target dict)
 play remainingTurns gs = do
     (GS played won streak target dict) <- gs
     if remainingTurns < turns
@@ -97,7 +99,7 @@ play remainingTurns gs = do
       else
         putStr $ show gameResult
     if fullmatch gameResult
-      then return (GS (played+1) (won+1) streak target dict)
+      then return (GS (played+1) (won+1) (streak+1) target dict)
       else
         do
           play (remainingTurns-1) gs
